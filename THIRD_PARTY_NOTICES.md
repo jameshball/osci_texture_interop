@@ -9,9 +9,17 @@ The Windows backend bundles unchanged Spout2 2.007.017 files from the upstream r
 
 Source URL: https://github.com/leadedge/Spout2/releases/tag/2.007.017
 
-No Syphon SDK source or binary framework is bundled in this module. The macOS backend loads `Syphon.framework` at runtime when it is available.
+The macOS backend bundles an unchanged Syphon framework for installer packaging:
 
-The osci-render and sosci macOS packages install `External/syphon/Syphon.framework` to `/Library/Frameworks/Syphon.framework`. The bundled framework reports `CFBundleShortVersionString` `5`; product-facing notices must include the Syphon license text below and the Syphon Framework source URL.
+- `third_party/syphon/5/macos/Syphon.framework`
+  - `CFBundleShortVersionString`: `5`
+  - Code signature: Developer ID Application: James Ball (D86A3M3H2L)
+- `third_party/syphon/5/macos/Syphon.framework/Versions/A/Syphon`
+  - SHA-256: `93f58e2ff47f9a74faf972d3e0bc738d1860f485a6374fcebb38e23b31ac3589`
+- `third_party/syphon/5/macos/Syphon.framework/Versions/A/Resources/default.metallib`
+  - SHA-256: `cb86a906b81d55f1c9bc76cca17daf283d68b212e9a596d102b11f3382524397`
+
+The macOS backend loads `Syphon.framework` at runtime when it is available. Product installers can install the bundled framework to `/Library/Frameworks/Syphon.framework`.
 
 Syphon source URL: https://github.com/Syphon/Syphon-Framework
 
