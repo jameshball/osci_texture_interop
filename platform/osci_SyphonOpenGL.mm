@@ -7,19 +7,6 @@
 #import <OpenGL/OpenGL.h>
 #import <OpenGL/gl.h>
 
-#ifndef GL_READ_FRAMEBUFFER
-#define GL_READ_FRAMEBUFFER 0x8CA8
-#endif
-#ifndef GL_DRAW_FRAMEBUFFER
-#define GL_DRAW_FRAMEBUFFER 0x8CA9
-#endif
-#ifndef GL_READ_FRAMEBUFFER_BINDING
-#define GL_READ_FRAMEBUFFER_BINDING 0x8CAA
-#endif
-#ifndef GL_DRAW_FRAMEBUFFER_BINDING
-#define GL_DRAW_FRAMEBUFFER_BINDING 0x8CA6
-#endif
-
 @protocol OsciSyphonOpenGLServer
 - (id)initWithName:(NSString*)serverName context:(CGLContextObj)context options:(NSDictionary*)options;
 - (void)publishFrameTexture:(GLuint)texID textureTarget:(GLenum)target imageRegion:(NSRect)region textureDimensions:(NSSize)size flipped:(BOOL)isFlipped;

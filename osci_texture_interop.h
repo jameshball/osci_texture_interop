@@ -23,6 +23,7 @@
 
 #include <juce_core/juce_core.h>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -124,9 +125,11 @@ public:
     ErrorCode start(OpenGLSenderDescription description);
     ErrorCode publish(OpenGLTextureFrame frame);
     void stop();
+    [[nodiscard]] bool isRunning() const;
 
 private:
     std::unique_ptr<OpenGLSenderImpl> impl;
+    std::atomic<bool> running = false;
 };
 
 class OpenGLReceiver {
@@ -143,9 +146,11 @@ public:
     ErrorCode connect(SourceInfo source);
     ErrorCode receive(ReceivedOpenGLTexture& frame);
     void disconnect();
+    [[nodiscard]] bool isConnected() const;
 
 private:
     std::unique_ptr<OpenGLReceiverImpl> impl;
+    std::atomic<bool> connected = false;
 };
 
 BackendStatus getOpenGLBackendStatus();

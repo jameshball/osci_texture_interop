@@ -126,7 +126,9 @@ ErrorCode OpenGLSender::start(OpenGLSenderDescription description) {
         return ErrorCode::invalidState;
     }
 
-    return impl->start(std::move(description));
+    const ErrorCode error = impl->start(std::move(description));
+    running.store(error == ErrorCode::none);
+    return error;
 }
 
 ErrorCode OpenGLSender::publish(OpenGLTextureFrame frame) {
@@ -139,13 +141,20 @@ ErrorCode OpenGLSender::publish(OpenGLTextureFrame frame) {
 
 void OpenGLSender::stop() {
     impl->stop();
+    running.store(false);
+}
+
+bool OpenGLSender::isRunning() const {
+    return running.load();
 }
 
 OpenGLReceiver::OpenGLReceiver() : impl(createPlatformOpenGLReceiver()) {}
 OpenGLReceiver::~OpenGLReceiver() = default;
 
 ErrorCode OpenGLReceiver::connect(SourceInfo source) {
-    return impl->connect(std::move(source));
+    const ErrorCode error = impl->connect(std::move(source));
+    connected.store(error == ErrorCode::none);
+    return error;
 }
 
 ErrorCode OpenGLReceiver::receive(ReceivedOpenGLTexture& frame) {
@@ -154,6 +163,11 @@ ErrorCode OpenGLReceiver::receive(ReceivedOpenGLTexture& frame) {
 
 void OpenGLReceiver::disconnect() {
     impl->disconnect();
+    connected.store(false);
+}
+
+bool OpenGLReceiver::isConnected() const {
+    return connected.load();
 }
 
 BackendStatus getOpenGLBackendStatus() {
