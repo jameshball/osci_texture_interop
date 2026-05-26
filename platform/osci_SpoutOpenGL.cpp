@@ -34,6 +34,8 @@
 namespace osci::texture {
 namespace {
 
+using namespace juce::gl;
+
 using GetSpoutFunction = SPOUTHANDLE (WINAPI*)();
 
 constexpr std::array<unsigned char, 32> expectedSpoutDllSha256 {

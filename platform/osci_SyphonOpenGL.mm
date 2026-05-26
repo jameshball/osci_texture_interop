@@ -37,6 +37,8 @@
 namespace osci::texture {
 namespace {
 
+using namespace juce::gl;
+
 NSString* toNSString(const juce::String& value) {
     return [NSString stringWithUTF8String:value.toRawUTF8()];
 }
@@ -189,8 +191,8 @@ NSRect syphonImageRegionForFrame(const OpenGLTextureFrame& frame) {
     return NSMakeRect(0.0, 0.0, static_cast<CGFloat>(frame.width), static_cast<CGFloat>(frame.height));
 }
 
-constexpr GLenum syphonTextureRectangle = static_cast<GLenum>(openGLTextureRectangle);
-constexpr GLenum syphonTextureBindingRectangle = 0x84F6;
+constexpr GLenum syphonTextureRectangle = GL_TEXTURE_RECTANGLE;
+constexpr GLenum syphonTextureBindingRectangle = GL_TEXTURE_BINDING_RECTANGLE;
 
 void clearOpenGLErrors() {
     while (glGetError() != GL_NO_ERROR) {}
