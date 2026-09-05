@@ -297,14 +297,19 @@ private:
     juce::OpenGLContext context;
 };
 
-OpenGLTextureFrameGrabber::OpenGLTextureFrameGrabber(SourceInfo source) : source(std::move(source)) {
-    openGLComponent = std::make_unique<InvisibleOpenGLContextComponent>(static_cast<juce::OpenGLRenderer*>(this));
-}
+OpenGLTextureFrameGrabber::OpenGLTextureFrameGrabber(SourceInfo source) : source(std::move(source)) {}
 
 OpenGLTextureFrameGrabber::~OpenGLTextureFrameGrabber() {
     wanted.store(false);
     openGLComponent = nullptr;
     receiver.disconnect();
+}
+
+void OpenGLTextureFrameGrabber::start() {
+    wanted.store(true);
+    if (openGLComponent == nullptr) {
+        openGLComponent = std::make_unique<InvisibleOpenGLContextComponent>(static_cast<juce::OpenGLRenderer*>(this));
+    }
 }
 
 void OpenGLTextureFrameGrabber::stop() {
@@ -319,9 +324,7 @@ juce::String OpenGLTextureFrameGrabber::getSourceName() const {
     return source.displayName.isNotEmpty() ? source.displayName : "Texture Input";
 }
 
-void OpenGLTextureFrameGrabber::newOpenGLContextCreated() {
-    wanted.store(true);
-}
+void OpenGLTextureFrameGrabber::newOpenGLContextCreated() {}
 
 void OpenGLTextureFrameGrabber::renderOpenGL() {
     serviceFrame();

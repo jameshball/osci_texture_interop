@@ -45,11 +45,6 @@ constexpr std::array<unsigned char, 32> expectedSpoutDllSha256 {
     0x59, 0x8b, 0x21, 0xb1, 0xda, 0xae, 0x62, 0xeb,
 };
 
-HMODULE& spoutLibraryHandle() {
-    static HMODULE handle = nullptr;
-    return handle;
-}
-
 juce::String spoutDllName() {
     return "SpoutLibrary.dll";
 }
@@ -126,6 +121,18 @@ juce::File findSpoutLibraryFile() {
     }
 
     return {};
+}
+
+HMODULE spoutLibraryHandle() {
+    // Runtime availability is fixed for this process; C++ serialises the first load.
+    static const HMODULE handle = [] {
+        const auto file = findSpoutLibraryFile();
+        return file.existsAsFile()
+            ? LoadLibraryExW(file.getFullPathName().toWideCharPointer(), nullptr,
+                             LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)
+            : nullptr;
+    }();
+    return handle;
 }
 
 class SpoutInstance {
@@ -217,19 +224,7 @@ private:
             return getSpout != nullptr ? ErrorCode::none : ErrorCode::sdkUnavailable;
         }
 
-        HMODULE& processLibrary = spoutLibraryHandle();
-        if (processLibrary == nullptr) {
-            const juce::File spoutLibrary = findSpoutLibraryFile();
-            if (!spoutLibrary.existsAsFile()) {
-                return ErrorCode::sdkUnavailable;
-            }
-
-            processLibrary = LoadLibraryExW(spoutLibrary.getFullPathName().toWideCharPointer(),
-                                            nullptr,
-                                            LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
-        }
-
-        library = processLibrary;
+        library = spoutLibraryHandle();
         if (library == nullptr) {
             return ErrorCode::sdkUnavailable;
         }
@@ -467,13 +462,13 @@ public:
             return openError;
         }
 
+        connectedSource = source;
         const std::string name = toUtf8(senderName);
         if (!updateSenderDetails(name)) {
             disconnect();
             return ErrorCode::sourceNotFound;
         }
 
-        connectedSource = source;
         connectedSource.displayName = connectedSource.displayName.isNotEmpty() ? connectedSource.displayName : senderName;
         connectedSource.opaqueId = senderName;
         connectedSource.connectable = true;

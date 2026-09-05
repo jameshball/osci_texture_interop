@@ -212,6 +212,8 @@ public:
     std::function<void()> inputStopped;
     std::function<void(juce::String)> inputFailed;
 
+    // Configure callbacks before starting the GL thread.
+    void start();
     void stop();
     [[nodiscard]] bool isActive() const;
     [[nodiscard]] juce::String getSourceName() const;
