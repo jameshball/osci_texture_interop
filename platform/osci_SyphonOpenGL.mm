@@ -582,12 +582,12 @@ public:
             }
 
             const bool hasNewFrame = [client hasNewFrame];
-            id<OsciSyphonOpenGLImage> image = hasNewFrame || currentImage == nil ? [client newFrameImage] : currentImage;
-            if (image == nil) {
-                return ErrorCode::receiveFailed;
-            }
-
-            if (image != currentImage) {
+            if (hasNewFrame || currentImage == nil) {
+                id<OsciSyphonOpenGLImage> image = [client newFrameImage];
+                if (image == nil) {
+                    return ErrorCode::receiveFailed;
+                }
+                // Each newFrameImage call transfers ownership, even for the same cached image.
                 releaseCurrentImage();
                 currentImage = image;
             }
