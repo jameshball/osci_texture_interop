@@ -492,10 +492,7 @@ public:
         }
 
         ScopedTexture2DBinding textureBinding;
-        bool received = spout.get()->ReceiveTexture(receiverTexture,
-                                                    GL_TEXTURE_2D,
-                                                    false,
-                                                    0);
+        bool received = receiveInto(receiverTexture);
         if (consumeUpdateFlag()) {
             if (!updateSenderDetails(name)) {
                 return ErrorCode::connectionLost;
@@ -509,10 +506,7 @@ public:
                 return ErrorCode::receiveFailed;
             }
 
-            received = spout.get()->ReceiveTexture(receiverTexture,
-                                                   GL_TEXTURE_2D,
-                                                   false,
-                                                   0);
+            received = receiveInto(receiverTexture);
             if (consumeUpdateFlag()) {
                 return ErrorCode::receiveFailed;
             }
@@ -568,6 +562,29 @@ private:
         return false;
     }
 
+    // Where OpenGL can share textures with DirectX, Spout copies straight
+    // into ours. Where it can't (a virtual machine, some laptops), Spout
+    // shares through memory, and its copy into a texture there comes out
+    // nearly black: take the pixels as an image and upload them ourselves.
+    bool receiveInto(GLuint texture) {
+        if (spout.get()->IsGLDXready()) {
+            return spout.get()->ReceiveTexture(texture, GL_TEXTURE_2D, false, 0);
+        }
+        cpuPixels.resize(static_cast<std::size_t>(textureWidth) * static_cast<std::size_t>(textureHeight) * 4);
+        // Sized to the sender as it was just found; a sender that changes
+        // size meanwhile is reported (IsUpdated) and not copied.
+        if (!spout.get()->ReceiveImage(cpuPixels.data(), GL_RGBA, false, 0)) {
+            return false;
+        }
+        GLint alignment = 4;
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight, GL_RGBA, GL_UNSIGNED_BYTE, cpuPixels.data());
+        glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+        return true;
+    }
+
     bool consumeUpdateFlag() {
         return spout.get() != nullptr && spout.get()->IsUpdated();
     }
@@ -612,6 +629,7 @@ private:
     SpoutInstance spout;
     SourceInfo connectedSource;
     GLuint receiverTexture = 0;
+    std::vector<unsigned char> cpuPixels;
     int textureWidth = 0;
     int textureHeight = 0;
 };
