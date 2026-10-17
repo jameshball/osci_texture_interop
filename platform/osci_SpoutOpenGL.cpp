@@ -541,6 +541,7 @@ public:
         }
 
         connectedSource = {};
+        cpuShare = false;
     }
 
 private:
@@ -565,9 +566,16 @@ private:
     // Where OpenGL can share textures with DirectX, Spout copies straight
     // into ours. Where it can't (a virtual machine, some laptops), Spout
     // shares through memory, and its copy into a texture there comes out
-    // nearly black: take the pixels as an image and upload them ourselves.
+    // nearly black: take the pixels as an image, read through the CPU, and
+    // upload them ourselves. A sender on this machine that found it can't,
+    // or shares through the CPU, says so too, whatever OpenGL claims here.
     bool receiveInto(GLuint texture) {
-        if (spout.get()->IsGLDXready()) {
+        const bool cpu = !spout.get()->IsGLDXready() || spout.get()->GetSenderCPU() || !spout.get()->GetSenderGLDX();
+        if (cpu != cpuShare) {
+            spout.get()->SetCPUshare(cpu);
+            cpuShare = cpu;
+        }
+        if (!cpu) {
             return spout.get()->ReceiveTexture(texture, GL_TEXTURE_2D, false, 0);
         }
         cpuPixels.resize(static_cast<std::size_t>(textureWidth) * static_cast<std::size_t>(textureHeight) * 4);
@@ -630,6 +638,7 @@ private:
     SourceInfo connectedSource;
     GLuint receiverTexture = 0;
     std::vector<unsigned char> cpuPixels;
+    bool cpuShare = false;
     int textureWidth = 0;
     int textureHeight = 0;
 };
